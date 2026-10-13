@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shangkoy Photobooth – Digital Arts Photobooth</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Space+Mono:wght@700&family=Pacifico&family=Bangers&family=Lobster&family=Permanent+Marker&family=Caveat:wght@700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=38">
+</head>
+<body>
+<header class="top">
+  <div class="logo">SHANGKOY<br>PHOTOBOOTH</div>
+  <div class="pill lab">Digital Arts Lab</div>
+  <div class="pill live"><i></i>SESSION LIVE</div>
+</header>
+<div class="ticker" aria-hidden="true"><div class="track" id="track"></div></div>
+
+<section class="hero">
+  <svg class="deco spark" viewBox="0 0 60 60"><path d="M30 3 36 24 57 30 36 36 30 57 24 36 3 30 24 24Z" fill="#ffd04a" stroke="#2b2640" stroke-width="3" stroke-linejoin="round"/></svg>
+  <svg class="deco flower" viewBox="0 0 60 60"><g fill="#67d6e0" stroke="#2b2640" stroke-width="3"><circle cx="30" cy="14" r="11"/><circle cx="46" cy="30" r="11"/><circle cx="30" cy="46" r="11"/><circle cx="14" cy="30" r="11"/></g><circle cx="30" cy="30" r="8" fill="#ffd04a" stroke="#2b2640" stroke-width="3"/></svg>
+  <div class="deco zap">ZAP!</div>
+  <div class="deco circ c-pink"></div>
+  <div class="deco circ c-cyan"></div>
+
+  <span class="badge">Creative Computing Showcase</span>
+  <h1>Shangkoy Photobooth</h1>
+  <h2 class="banner">Digital Arts Photobooth</h2>
+  <p class="sub">Your snaps, one classic strip. Pick your look, choose a length, and let the good times roll.</p>
+  <ol class="steps">
+    <li><b>01</b> Pick a filter</li><li class="dash"></li>
+    <li><b>02</b> Take your snaps</li><li class="dash"></li>
+    <li><b>03</b> Save it forever</li>
+  </ol>
+
+  <div class="booth" id="booth">
+  <div class="stage" id="stage">
+    <aside class="side">
+      <span class="tag">STYLE // 02</span>
+      <div class="lbl mid">Pick a template</div>
+      <div class="tpls" id="tpls">
+        <button class="tpl on" data-t="classic"><span class="ic"><svg viewBox="0 0 24 24" width="20" height="20"><rect x="7" y="2" width="10" height="20" rx="2" fill="#ffd04a" stroke="#2b2640" stroke-width="2"/><rect x="9.5" y="5" width="5" height="4" fill="#fff6d6"/><rect x="9.5" y="11" width="5" height="4" fill="#fff6d6"/></svg></span>Classic</button>
+        <button class="tpl" data-t="monkey"><span class="ic"><img src="assets/pose2.png" alt=""></span>Copy the pose</button>
+        <button class="tpl" data-t="trio"><span class="ic"><img src="assets/trio2.png" alt=""></span>Trio memes</button>
+        <button class="tpl" data-t="duo"><span class="ic"><img src="assets/duo2.png" alt=""></span>Duo memes</button>
+        <button class="tpl" data-t="couple"><span class="ic"><img src="assets/couple2.png" alt=""></span>Couple vibes</button>
+        <button class="tpl" data-t="custom"><span class="ic" id="ownIc"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#2b2640" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>Create own</button>
+      </div>
+      <hr class="rule">
+      <div id="layRow">
+        <div class="lbl mid">Pick a layout</div>
+        <div class="lays" id="lays"></div>
+        <hr class="rule">
+      </div>
+      <div class="lbl mid">Add a sticker</div>
+      <div class="stickers" id="stickers">
+        <button class="stk on" data-s=""><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22"><rect x="2" y="2" width="20" height="20" rx="4" fill="#fff6d6"/><path d="M5 19 19 5" stroke="#f44d6a" stroke-width="2.5" stroke-linecap="round"/></svg></span>None</button>
+        <button class="stk" data-s="⭐"><span class="ic">⭐</span>Star</button>
+        <button class="stk" data-s="❤️"><span class="ic">❤️</span>Heart</button>
+        <button class="stk" data-s="⚡"><span class="ic">⚡</span>Bolt</button>
+        <button class="stk" data-s="🌸"><span class="ic">🌸</span>Flower</button>
+      </div>
+    </aside>
+    <div class="cam">
+      <span class="tag">CAM // 01</span>
+      <div class="screen">
+        <video id="video" autoplay playsinline muted></video>
+        <div id="idle" class="idle">
+          <div class="camicon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff6d6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.6"/></svg></div>
+          <h3>Ready when you are</h3>
+          <p>Turn on your camera to enter the booth.</p>
+          <button id="startCam" class="btn yellow">Start camera</button>
+        </div>
+        <div class="tools"><button id="sndBtn" class="fsbtn" type="button" aria-label="Sound on"></button><button id="fsBtn" class="fsbtn" type="button" aria-label="Fullscreen"></button></div>
+        <div id="stkLive"></div>
+        <div id="poseHint" hidden><span>COPY THIS!</span><img id="poseImg" alt="Pose to copy"></div>
+        <div id="countdown" aria-live="assertive"></div>
+        <div id="flash"></div>
+      </div>
+
+      <div class="ctrl">
+        <div>
+          <div class="lbl">Choose your vibe</div>
+          <div class="vibes" id="vibes">
+            <button class="vibe on" data-f="none"><i style="background:linear-gradient(135deg,#ffd04a 50%,#67d6e0 50%)"></i>Natural</button>
+            <button class="vibe" data-f="grayscale(1) contrast(1.1)"><i style="background:linear-gradient(135deg,#d8d8de 50%,#9d9da8 50%)"></i>B&amp;W</button>
+            <button class="vibe" data-f="sepia(.35) saturate(1.4) hue-rotate(-12deg)"><i style="background:linear-gradient(135deg,#ffd04a 50%,#ff8a65 50%)"></i>Warm</button>
+            <button class="vibe" data-f="saturate(1.1) hue-rotate(18deg) brightness(1.05)"><i style="background:linear-gradient(135deg,#8fd3ff 50%,#ff9fb0 50%)"></i>Cool</button>
+          </div>
+        </div>
+        <button id="snap" class="shutter" aria-label="Start photo session" disabled>
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#d9b3e6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.6"/></svg>
+        </button>
+        <div class="take">
+          <div class="lbl">Set timer</div>
+          <div class="timers" id="timers"><button class="on" data-s="3">3s</button><button data-s="5">5s</button><button data-s="10">10s</button></div>
+          <div class="lbl" id="timerLbl">3 seconds</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stripcol" id="stripcol"><div class="strip" id="stripEl"></div></div>
+  </div>
+
+  <div class="below">
+    <button id="retake" class="btn white mono" disabled>Start over</button>
+    <button id="download" class="btn cyanb mono" disabled>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"/></svg> Download your strip</button>
+    <button id="qrBtn" class="btn pinkb mono" disabled>Scan to save on phone</button>
+    <button id="histBtn" class="btn white mono">Recent strips</button>
+  </div>
+  <p id="msg" role="status"></p>
+  <div class="recent" id="recentBar">
+    <div class="recenthead"><span class="lbl dark">Recent strips</span><button id="recentAll" class="linkbtn" type="button">View all</button></div>
+    <div id="recentList" class="histlist"><p class="histempty">Finished strips show up here automatically.</p></div>
+  </div>
+<dialog id="doneDlg">
+  <button id="doneX" class="xbtn" type="button" aria-label="Close">✕</button>
+  <h3>Your strip is ready!</h3>
+  <div class="donebody">
+    <div class="donepic"><img id="doneImg" alt="Your photo strip"></div>
+    <div class="doneside">
+      <div class="doneacts">
+        <button id="mRetake" class="btn white mono">Start over</button>
+        <button id="mDownload" class="btn yellow mono">Download your strip</button>
+        <button id="mQr" class="btn pinkb mono">Scan to save on phone</button>
+      </div>
+      <div class="hist">
+        <div class="histhead"><span class="lbl dark">Recent strips</span><button id="histClear" class="linkbtn" type="button">Clear</button></div>
+        <div id="histList" class="histlist"><p class="histempty">Your finished strips will show up here.</p></div>
+      </div>
+    </div>
+  </div>
+</dialog>
+<dialog id="histDlg">
+  <button id="histX" class="xbtn" type="button" aria-label="Close">✕</button>
+  <h3>Recent strips</h3>
+  <div id="histGrid" class="histgrid"></div>
+  <button id="gClear" class="linkbtn" type="button">Clear all</button>
+</dialog>
+<dialog id="viewDlg">
+  <button id="viewX" class="xbtn" type="button" aria-label="Close">✕</button>
+  <h3>Your strip</h3>
+  <p id="viewDate" class="viewdate"></p>
+  <div class="viewmain">
+    <div class="viewwrap">
+      <button id="vPrev" class="navbtn" type="button" aria-label="Previous strip">‹</button>
+      <div class="donepic"><img id="viewImg" alt="Saved photo strip" title="Click to zoom"></div>
+      <button id="vNext" class="navbtn" type="button" aria-label="Next strip">›</button>
+    </div>
+    <div class="viewacts">
+      <button id="vDownload" class="btn yellow mono">Download your strip</button>
+      <button id="vQr" class="btn pinkb mono">Scan to save on phone</button>
+      <button id="vDelete" class="btn white mono">Delete</button>
+      <p class="viewhint">Click the strip to zoom in or out.</p>
+    </div>
+  </div>
+</dialog>
+<dialog id="ownDlg">
+  <button id="ownX" class="xbtn" type="button" aria-label="Close">✕</button>
+  <h3>Create your own template</h3>
+  <label class="ownlbl" for="ownTitle">Template title</label>
+  <input id="ownTitle" class="owninput" type="text" maxlength="22" placeholder="My Template" autocomplete="off">
+  <div class="ownhead"><span class="ownlbl">Attach images (max 4)</span><span id="ownCount" class="owncount">0 / 4</span></div>
+  <div id="ownSlots" class="ownslots"></div>
+  <input id="ownFile" type="file" accept="image/*" multiple hidden>
+  <button id="ownPick" class="btn cyanb mono" type="button">Choose images</button>
+  <p id="ownNote" class="ownnote">Add 1 to 4 images. They use the same layout as Duo memes.</p>
+  <div class="ownacts">
+    <button id="ownCancel" class="btn white mono" type="button">Cancel</button>
+    <button id="ownDone" class="btn yellow mono" type="button">Use this template</button>
+  </div>
+</dialog>
+<dialog id="editDlg">
+  <h3>Edit your strip</h3>
+  <div class="editbody">
+    <div class="editwrap">
+      <div id="editStage" class="editstage"><img id="editImg" alt="Your strip preview" draggable="false"><div id="editLayer"></div></div>
+    </div>
+    <div class="editpanel">
+      <div class="ownlbl">Layout <span class="edithint">Instagram = full-screen collage</span></div>
+      <div id="editFmt" class="fontrow fmtrow">
+        <button type="button" data-f="strip" class="on">Photo strip</button>
+        <button type="button" data-f="story">Instagram story (My Day)</button>
+      </div>
+      <div id="editStyleBox">
+      <label class="ownlbl" for="editTitle">Strip title</label>
+      <input id="editTitle" class="owninput" type="text" maxlength="28" autocomplete="off">
+      <div id="editTitleFont" class="fontrow"></div>
+      <div class="ownlbl">Strip color</div>
+      <div id="editBg" class="swatches bgsw"></div>
+      </div>
+      <div class="ownlbl">Stickers <span class="edithint">tap to add, then drag on the strip</span></div>
+      <div id="editStk" class="editstk"></div>
+      <button id="editAddText" class="btn cyanb mono" type="button">+ Add text</button>
+      <p id="editHint" class="editnote">Tap a sticker or text on the strip to resize, rotate or delete it.</p>
+      <div id="editSel" class="editsel" hidden>
+        <div id="selTextRow"><label class="ownlbl" for="selText">Text</label><input id="selText" class="owninput" type="text" maxlength="30" autocomplete="off"></div>
+        <div id="selFont" class="fontrow"></div>
+        <div id="editColors" class="swatches"></div>
+        <div id="selTextStyle">
+          <div class="ownlbl">Text outline</div><div id="editStroke" class="swatches bgsw"></div>
+          <div class="ownlbl">Text background</div><div id="editTbg" class="swatches bgsw"></div>
+        </div>
+        <label class="ownlbl" for="selSize">Size</label><input id="selSize" type="range" min="3" max="60" step="1">
+        <label class="ownlbl" for="selRot">Rotate</label><input id="selRot" type="range" min="-180" max="180" step="1">
+        <button id="selDel" class="btn white mono" type="button">Delete this</button>
+      </div>
+      <div class="ownacts">
+        <button id="editRestart" class="btn white mono" type="button">Start over</button>
+        <button id="editClear" class="btn white mono" type="button">Clear edits</button>
+        <button id="editDone" class="btn yellow mono" type="button">Finish strip</button>
+      </div>
+    </div>
+  </div>
+</dialog>
+<dialog id="qrDlg">
+  <h3>Scan to save your strip</h3>
+  <div id="qrBox" class="qrbox"></div>
+  <p id="qrNote">Making your link…</p>
+  <button id="qrClose" class="btn yellow mono">Close</button>
+</dialog>
+
+</div>
+</section>
+
+<footer class="foot"><p>Art, code, and a very good camera angle.</p><small>Photo links expire in 1 hour</small></footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="js/script.js?v=41"></script>
+</body>
+</html>

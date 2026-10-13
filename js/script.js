@@ -62,7 +62,7 @@ document.addEventListener('click', e => {
 });
 const video = $('video');
 const W = 600, H = 580;
-const st = { filter: 'none', count: 3, sticker: '', template: 'classic', timer: 3, layout: 'strip3', titleText: '', bgColor: '#ffd04a', titleFont: 'Fredoka', format: 'strip' };
+const st = { filter: 'none', count: 3, sticker: '', template: 'classic', timer: 3, layout: 'strip3', titleText: '', bgColor: '#ffd04a', titleFont: 'Fredoka', format: 'strip', frame: 'classic' };
 let photos = [], busy = false, animIdx = -1;
 const retrigger = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
 
@@ -83,10 +83,11 @@ const TEMPLATES = {
   monkey: { title: 'Shangkoy PhotoBooth', layout: 'side', ratio: 1.03, pw: 400, stripW: 400, poses: [1, 2, 3, 4].map(n => `assets/pose${n}.png`), hint: 'Copy the pose shown next to each photo!' },
   trio: { title: 'Trio Vibes', layout: 'side', ratio: 1.5, pw: 440, stripW: 540, poses: [1, 2, 3].map(n => `assets/trio${n}.png`), labels: ['Squad squish', 'Drama time', 'Mood check'], hint: 'Match the vibe of each meme!' },
   duo: { title: 'Double Trouble', layout: 'side', ratio: 1.6, pw: 440, stripW: 540, poses: [1, 2, 3, 4].map(n => `assets/duo${n}.png`), labels: ['Selfie duo', 'Cuddle time', 'Rock on', 'Goat glam'], hint: 'Grab a buddy and copy each duo!' },
-  couple: { title: 'Couple Vibes', layout: 'side', ratio: 1.6, pw: 440, stripW: 540, poses: [1, 2, 3, 4].map(n => `assets/couple${n}.png`), labels: ['Sweet kiss', 'Cheek to cheek', 'Tight hug', 'Playful tease'], hint: 'Grab your partner and copy each couple pose!' }
+  couple: { title: 'Couple Vibes', layout: 'side', ratio: 1.6, pw: 440, stripW: 540, poses: [1, 2, 3, 4].map(n => `assets/couple${n}.png`), labels: ['Sweet kiss', 'Cheek to cheek', 'Tight hug', 'Playful tease'], hint: 'Grab your partner and copy each couple pose!' },
+  bunny: { title: 'Bunny Pose', layout: 'side', ratio: 1.13, pw: 440, stripW: 540, poses: [1, 2, 3, 4].map(n => `assets/bunny${n}.png`), labels: ['Secret gossip', 'Shy sparkle', 'Blow a kiss', 'Cheeky wink'], hint: 'Copy the bunny pose shown next to each photo!' }
 };
 const tpl = () => TEMPLATES[st.template];
-pick('tpls', '.tpl', b => { if (b.dataset.t === 'custom') openOwn(); else setTemplate(b.dataset.t); });
+pick('tpls', '.tpl', b => { if (b.dataset.t === 'custom') needUnlock(openOwn, syncTplOn); else setTemplate(b.dataset.t); });
 function setTemplate(t) { st.template = t; refreshMode(); }
 const syncTplOn = () => $('tpls').querySelectorAll('.tpl').forEach(x => x.classList.toggle('on', x.dataset.t === st.template));
 
@@ -271,6 +272,8 @@ $('startCam').onclick = async () => {
 
 $('snap').onclick = async () => {
   if (busy) return;
+  if (!unlocked && takesUsed() >= FREE_TAKES) return needUnlock(() => $('snap').click(), null, `You have used all ${FREE_TAKES} free takes. Enter the code to unlock unlimited takes.`);
+  if (!unlocked) bumpTakes();
   busy = true; photos = []; resetEdits(); renderSlots(); $('snap').disabled = true; updateBtns();
   for (let i = 1; i <= st.count; i++) {
     say(`Snap ${i} of ${st.count}`);
@@ -368,9 +371,302 @@ async function storyStrip() {
   rows.forEach((k, r) => { for (let j = 0; j < k; j++, i++) drawCover(x, imgs[i], j * SW / k, r * ch, SW / k, ch); });
   return c.toDataURL('image/png');
 }
+// ---- Frame designs for the single-column photo strip: Photoism, Train ticket, Instagram posts, Film ----
+const FRAME_BG = { classic: '#ffd04a', photoism: '#ffffff', ticket: '#ffffff', insta: '#ffffff', film: '#2b2640', music: '#ffffff', doodle: '#ffffff', grid2: '#ffffff', cuts: '#ffffff' };
+const isDark = h => { const v = parseInt(h.slice(1), 16), r = v >> 16, g = (v >> 8) & 255, b = v & 255; return (r * 299 + g * 587 + b * 114) / 1000 < 140; };
+function burst(x, cx, cy, r, spikes, fill) {
+  x.beginPath();
+  for (let i = 0; i < spikes * 2; i++) { const a = Math.PI * i / spikes, rad = i % 2 ? r * .62 : r; x[i ? 'lineTo' : 'moveTo'](cx + Math.cos(a) * rad, cy + Math.sin(a) * rad); }
+  x.closePath(); x.fillStyle = fill; x.fill();
+}
+function sparkle(x, cx, cy, r, fill) {
+  x.beginPath(); x.moveTo(cx, cy - r); x.quadraticCurveTo(cx, cy, cx + r, cy); x.quadraticCurveTo(cx, cy, cx, cy + r);
+  x.quadraticCurveTo(cx, cy, cx - r, cy); x.quadraticCurveTo(cx, cy, cx, cy - r); x.closePath(); x.fillStyle = fill; x.fill();
+}
+function ghost(x, cx, cy, s, ink) {                 // little cloud mascot
+  x.save(); x.translate(cx, cy); x.scale(s, s);
+  x.beginPath(); x.moveTo(-34, 14); x.bezierCurveTo(-52, 8, -48, -22, -26, -22); x.bezierCurveTo(-24, -42, 8, -48, 14, -28);
+  x.bezierCurveTo(36, -34, 50, -8, 36, 6); x.bezierCurveTo(52, 20, 36, 34, 20, 28); x.bezierCurveTo(10, 40, -12, 38, -18, 28); x.bezierCurveTo(-30, 34, -44, 26, -34, 14); x.closePath();
+  x.fillStyle = '#ffffff'; x.fill(); x.lineWidth = 3.5; x.strokeStyle = ink; x.stroke();
+  x.fillStyle = ink; [-11, 11].forEach(ex => { x.beginPath(); x.arc(ex, -2, 3.2, 0, 7); x.fill(); });
+  x.fillStyle = '#ff9fb0'; [-20, 20].forEach(ex => { x.beginPath(); x.arc(ex, 6, 4.5, 0, 7); x.fill(); });
+  x.lineWidth = 2.5; x.beginPath(); x.arc(0, 4, 4, .1 * Math.PI, .9 * Math.PI); x.stroke();
+  x.restore();
+}
+function heartPath(x, cx, cy, s) { x.beginPath(); x.moveTo(cx, cy + s); x.bezierCurveTo(cx - s * 2, cy - s * .2, cx - s * .7, cy - s * 1.6, cx, cy - s * .5); x.bezierCurveTo(cx + s * .7, cy - s * 1.6, cx + s * 2, cy - s * .2, cx, cy + s); }
+function qrLike(x, px, py, size, ink, bg, seed) {   // decorative QR-style block (not a real code)
+  const N = 21, cs = size / N; let s = (seed >>> 0) || 7;
+  const rnd = () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296;
+  x.fillStyle = ink;
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    const inF = (r < 8 && c < 8) || (r < 8 && c > N - 9) || (r > N - 9 && c < 8);
+    if (!inF && rnd() > .5) x.fillRect(px + c * cs, py + r * cs, cs, cs);
+  }
+  [[0, 0], [N - 7, 0], [0, N - 7]].forEach(([fx, fy]) => {
+    x.fillStyle = ink; x.fillRect(px + fx * cs, py + fy * cs, 7 * cs, 7 * cs);
+    x.fillStyle = bg; x.fillRect(px + (fx + 1) * cs, py + (fy + 1) * cs, 5 * cs, 5 * cs);
+    x.fillStyle = ink; x.fillRect(px + (fx + 2) * cs, py + (fy + 2) * cs, 3 * cs, 3 * cs);
+  });
+}
+// Photos only (no background, title or frame) for pose templates and board layouts, so they can sit inside any frame design
+async function contentCanvas() {
+  const T = tpl(), L = curLayout(), n = photos.length, ink = '#2b2640';
+  const imgs = await Promise.all(photos.map(loadImg));
+  const c = document.createElement('canvas'); let x;
+  if (T) {
+    const pw = T.pw, ph = Math.round(pw / T.ratio), gap = 14, rg = 14, refs = await Promise.all(T.poses.slice(0, n).map(loadImg));
+    c.width = pw * 2 + rg + 6; c.height = n * ph + (n - 1) * gap + 6; x = c.getContext('2d'); x.lineJoin = 'round'; x.strokeStyle = ink; x.lineWidth = 4;
+    imgs.forEach((im, i) => {
+      const y = 3 + i * (ph + gap), rx = 3 + pw + rg;
+      drawCover(x, im, 3, y, pw, ph); x.strokeRect(3, y, pw, ph);
+      drawCover(x, refs[i], rx, y, pw, ph); x.strokeRect(rx, y, pw, ph);
+      if (T.labels) {
+        x.font = '700 18px "Space Mono", monospace'; x.textAlign = 'left';
+        const label = T.labels[i].toUpperCase(), lw = x.measureText(label).width + 28;
+        x.fillStyle = '#f44d6a'; rr(x, rx + 12, y + 12, lw, 32, 16); x.fill(); x.lineWidth = 4; x.stroke();
+        x.fillStyle = '#ffffff'; x.fillText(label, rx + 26, y + 34);
+      }
+    });
+  } else {
+    const k = 6, cells = L.cells.slice(0, n);
+    const x0 = Math.min(...cells.map(q => q[0])), y0 = Math.min(...cells.map(q => q[1])), x1 = Math.max(...cells.map(q => q[0] + q[2])), y1 = Math.max(...cells.map(q => q[1] + q[3]));
+    c.width = Math.round((x1 - x0) * k) + 6; c.height = Math.round((y1 - y0) * k) + 6; x = c.getContext('2d'); x.lineJoin = 'round'; x.strokeStyle = ink; x.lineWidth = 5;
+    cells.forEach(([cx, cy, w, h], i) => { const px = 3 + (cx - x0) * k, py = 3 + (cy - y0) * k; drawCover(x, imgs[i], px, py, w * k, h * k); x.strokeRect(px, py, w * k, h * k); });
+  }
+  return c;
+}
+async function designStrip() {
+  await Promise.all(['700 20px "Space Mono"', '400 20px Fredoka', '600 20px Fredoka', '700 20px Fredoka'].map(f => document.fonts.load(f)));
+  const f = st.frame, wrap = !!(tpl() || curLayout());          // pose templates and board layouts go in as one picture
+  let sp = 0, imgs;
+  if (wrap) { const cc = await contentCanvas(); sp = cc.width / cc.height; imgs = [cc]; } else imgs = await Promise.all(photos.map(loadImg));
+  const n = imgs.length, ph1 = (pw, d) => sp ? Math.round(pw / sp) : d;
+  const bg = st.bgColor, dark = isDark(bg), ink = dark ? '#ffffff' : '#1f1d2b', sub = dark ? '#c9c6dc' : '#6b6880';
+  const ttl = (st.titleText || '').trim(), now = new Date();
+  let c, x;
+  const mk = (w, h) => { c = document.createElement('canvas'); c.width = w; c.height = h; x = c.getContext('2d'); x.fillStyle = bg; x.fillRect(0, 0, w, h); x.lineJoin = 'round'; x.lineCap = 'round'; };
+  const fitTo = (t, mkFont, px, maxW) => { x.font = mkFont(px); const w = x.measureText(t).width; if (w > maxW) { px = Math.max(8, Math.floor(px * maxW / w)); x.font = mkFont(px); } return px; };
+  const mono = (w, px) => `${w} ${px}px "Space Mono", monospace`, fre = (w, px) => `${w} ${px}px Fredoka, sans-serif`;
+  const p2 = v => String(v).padStart(2, '0');
+  const spacing = v => { if ('letterSpacing' in x) x.letterSpacing = v; };
+
+  if (f === 'photoism') {
+    const side = 58, pw = 470, ph = ph1(pw, 360), gap = 20, top = 130, bot = 120, W = side * 2 + pw, H = top + n * ph + (n - 1) * gap + bot;
+    mk(W, H);
+    const name = (ttl || 'shangkoy photobooth').toLowerCase();
+    x.strokeStyle = sub; x.lineWidth = 3; rr(x, 8, 8, W - 16, H - 16, 14); x.stroke();
+    x.fillStyle = ink; rr(x, W / 2 - 135, 34, 270, 62, 31); x.fill();
+    x.fillStyle = bg; x.textAlign = 'center'; fitTo(name, p => fnt(st.titleFont, p), 30, 220); x.fillText(name, W / 2, 76);
+    imgs.forEach((im, i) => {
+      const y = top + i * (ph + gap);
+      drawCover(x, im, side, y, pw, ph); x.strokeStyle = ink; x.lineWidth = 3; x.strokeRect(side, y, pw, ph);
+      x.fillStyle = ink; x.textAlign = 'center'; x.font = mono(700, 16); x.fillText(String(i + 1), side / 2, y + ph / 2 - 6);
+      x.beginPath(); x.moveTo(side / 2, y + ph / 2 + 6); x.lineTo(side / 2 - 6, y + ph / 2 + 18); x.lineTo(side / 2 + 6, y + ph / 2 + 18); x.closePath(); x.fill();
+      const side2 = i % 2 ? name.toUpperCase() : 'KEEP SMILING';
+      spacing('3px'); x.save(); x.translate(W - side / 2 + 5, y + ph / 2); x.rotate(-Math.PI / 2); x.textAlign = 'center';
+      fitTo(side2, p => mono(700, p), 15, ph - 60); x.fillStyle = ink; x.fillText(side2, 0, 0); x.restore(); spacing('0px');
+      const k = i % 3;
+      if (k === 0) { burst(x, side + pw - 34, y + 38, 22, 9, ink); sparkle(x, side + pw - 34, y + 38, 8, bg); }
+      if (k === 1) ghost(x, side + 62, y + ph - 46, .95, ink);
+      if (k === 2) { burst(x, side + 36, y + 40, 20, 8, ink); sparkle(x, side + 36, y + 40, 7, bg); sparkle(x, side + pw - 36, y + ph - 40, 12, '#ffffff'); }
+    });
+    x.fillStyle = sub; x.textAlign = 'center'; x.font = fre(400, 19); x.fillText('keep smiling at', W / 2, H - 66);
+    x.fillStyle = ink; fitTo(name, p => fnt(st.titleFont, p), 32, W - 220); x.fillText(name, W / 2, H - 28);
+    ghost(x, W - 74, H - 58, .8, ink);
+  }
+
+  if (f === 'ticket') {
+    const pad = 40, pw = 480, ph = ph1(pw, 330), gap = 16, top = 62, stub = 262, W = pad * 2 + pw, ys = top + n * ph + (n - 1) * gap + 30, H = ys + stub;
+    mk(W, H);
+    x.strokeStyle = ink; x.lineWidth = 4; rr(x, 6, 6, W - 12, H - 12, 20); x.stroke();
+    x.fillStyle = sub; x.textAlign = 'center'; x.font = mono(700, 14); spacing('3px'); x.fillText('PHOTO TICKET · ADMIT ONE', W / 2, 40); spacing('0px');
+    imgs.forEach((im, i) => { const y = top + i * (ph + gap); drawCover(x, im, pad, y, pw, ph); x.strokeStyle = ink; x.lineWidth = 3; x.strokeRect(pad, y, pw, ph); });
+    x.setLineDash([10, 8]); x.strokeStyle = sub; x.lineWidth = 2; x.beginPath(); x.moveTo(pad - 20, ys); x.lineTo(W - pad + 20, ys); x.stroke(); x.setLineDash([]);
+    const station = (ttl || 'Shangkoy Station').toUpperCase();
+    x.textAlign = 'left'; x.fillStyle = ink; fitTo(station, p => mono(700, p), 25, 300); x.fillText(station, pad, ys + 50);
+    x.fillStyle = ink; x.fillRect(pad, ys + 64, 300, 3);
+    x.fillStyle = sub; x.font = mono(700, 15); x.fillText('FIRST CLASS', pad, ys + 92);
+    const row = (label, val, y) => { x.fillStyle = sub; x.font = mono(700, 12); x.fillText(label, pad, y); x.fillStyle = ink; fitTo(val, p => mono(700, p), 24, 290); x.fillText(val, pad, y + 26); };
+    row('DEPARTURE', 'STRANGER', ys + 130); row('ARRIVAL', 'FRIENDSHIP', ys + 188);
+    x.fillStyle = sub; x.font = mono(700, 12); x.fillText('No. ' + String(now.getTime()).slice(-6), pad, ys + 246);
+    const x0 = pad + 330, p2 = v => String(v).padStart(2, '0');
+    x.fillStyle = sub; x.font = mono(700, 12); x.fillText('BOARDING', x0, ys + 50);
+    x.fillStyle = ink; x.font = mono(700, 58); x.fillText(p2(now.getDate()), x0, ys + 108);
+    x.font = mono(700, 24); x.fillText(p2(now.getHours()) + ':' + p2(now.getMinutes()), x0, ys + 146);
+    x.fillStyle = sub; x.font = mono(700, 13); x.fillText(now.toLocaleString('en', { month: 'short' }).toUpperCase() + ' ' + now.getFullYear(), x0, ys + 168);
+    qrLike(x, W - pad - 82, ys + 168, 82, ink, bg, now.getDate() * 97 + n);
+  }
+
+  if (f === 'insta') {
+    const m = 22, pw = 500, ph = ph1(pw, 340), hdr = 56, ftr = 96, W = pw + m * 2, gap = 8, topPad = 22, post = hdr + ph + ftr, playH = 250;
+    const H = topPad + n * post + (n - 1) * gap + playH;
+    mk(W, H);
+    const user = (ttl || 'shangkoy.photobooth').toLowerCase().replace(/\s+/g, '.');
+    const caps = ['good vibes only', 'my day today', 'snap snap snap', 'best day ever'];
+    imgs.forEach((im, i) => {
+      const y = topPad + i * (post + gap), py = y + hdr + ph;
+      const g = x.createLinearGradient(m, y, m + 38, y + 38); g.addColorStop(0, '#f9ce34'); g.addColorStop(.5, '#ee2a7b'); g.addColorStop(1, '#6228d7');
+      x.beginPath(); x.arc(m + 18, y + 28, 19, 0, 7); x.fillStyle = g; x.fill();
+      x.beginPath(); x.arc(m + 18, y + 28, 15, 0, 7); x.fillStyle = bg; x.fill();
+      x.beginPath(); x.arc(m + 18, y + 28, 12, 0, 7); x.fillStyle = '#d9d6e6'; x.fill();
+      x.textAlign = 'left'; x.fillStyle = ink; x.font = fre(600, 17); x.fillText(user, m + 46, y + 34);
+      const ux = m + 46 + x.measureText(user).width + 14;
+      x.beginPath(); x.arc(ux, y + 28, 8, 0, 7); x.fillStyle = '#3797f0'; x.fill();
+      x.strokeStyle = '#ffffff'; x.lineWidth = 2.2; x.beginPath(); x.moveTo(ux - 4, y + 28); x.lineTo(ux - 1, y + 31); x.lineTo(ux + 4, y + 25); x.stroke();
+      x.fillStyle = ink; [0, 1, 2].forEach(d => { x.beginPath(); x.arc(m + pw - 8, y + 20 + d * 8, 2, 0, 7); x.fill(); });
+      drawCover(x, im, m, y + hdr, pw, ph);
+      const iy = py + 30, hx = m + 14, hs = 9; x.lineWidth = 2.4;
+      x.beginPath(); x.moveTo(hx, iy + hs); x.bezierCurveTo(hx - hs * 2, iy - hs * .2, hx - hs * .7, iy - hs * 1.5, hx, iy - hs * .5);
+      x.bezierCurveTo(hx + hs * .7, iy - hs * 1.5, hx + hs * 2, iy - hs * .2, hx, iy + hs);
+      if (i % 2 === 0) { x.fillStyle = '#ed4956'; x.fill(); x.strokeStyle = '#ed4956'; } else x.strokeStyle = ink;
+      x.stroke();
+      x.strokeStyle = ink;
+      x.beginPath(); x.arc(m + 56, iy, 11, 0, 7); x.stroke();
+      x.beginPath(); x.moveTo(m + 49, iy + 9); x.lineTo(m + 44, iy + 15); x.lineTo(m + 54, iy + 12); x.stroke();
+      x.beginPath(); x.moveTo(m + 88, iy - 2); x.lineTo(m + 113, iy - 11); x.lineTo(m + 104, iy + 12); x.lineTo(m + 99, iy + 3); x.closePath();
+      x.moveTo(m + 99, iy + 3); x.lineTo(m + 113, iy - 11); x.stroke();
+      const bx = m + pw - 12;
+      x.beginPath(); x.moveTo(bx - 9, iy - 11); x.lineTo(bx + 9, iy - 11); x.lineTo(bx + 9, iy + 12); x.lineTo(bx, iy + 4); x.lineTo(bx - 9, iy + 12); x.closePath(); x.stroke();
+      x.fillStyle = ink; x.font = fre(600, 15); x.fillText((1200 + i * 337).toLocaleString('en') + ' likes', m, py + 62);
+      x.fillText(user, m, py + 84); const uw = x.measureText(user).width;
+      x.font = fre(400, 15); x.fillText(caps[i % 4], m + uw + 8, py + 84);
+    });
+    const p0 = topPad + n * post + (n - 1) * gap + 14;
+    x.textAlign = 'left'; x.fillStyle = ink; x.font = fre(700, 21); x.fillText('Good Energy', m, p0 + 28);
+    x.fillStyle = sub; fitTo(ttl || 'Shangkoy Photobooth', p => fre(400, p), 15, 250); x.fillText(ttl || 'Shangkoy Photobooth', m, p0 + 50);
+    const cx0 = m + pw - 176;
+    x.beginPath(); x.arc(cx0, p0 + 28, 13, 0, 7); x.fillStyle = ink; x.fill();
+    x.strokeStyle = bg; x.lineWidth = 2; [[-6, 7], [-4.5, 5], [-3, 3]].forEach(([dy, r]) => { x.beginPath(); x.arc(cx0, p0 + 28 - dy + 4, r, 1.15 * Math.PI, 1.85 * Math.PI); x.stroke(); });
+    x.strokeStyle = ink; x.lineWidth = 3;
+    for (let b = 0; b < 26; b++) { const hh = 6 + ((b * 53) % 7) * 3.4; x.beginPath(); x.moveTo(cx0 + 26 + b * 5.4, p0 + 28 - hh / 2); x.lineTo(cx0 + 26 + b * 5.4, p0 + 28 + hh / 2); x.stroke(); }
+    const ly = p0 + 88, kx = m + pw * .38;
+    x.fillStyle = dark ? '#555' : '#d4d2de'; rr(x, m, ly - 2, pw, 4, 2); x.fill();
+    x.fillStyle = ink; rr(x, m, ly - 2, pw * .38, 4, 2); x.fill(); x.beginPath(); x.arc(kx, ly, 7, 0, 7); x.fill();
+    x.fillStyle = sub; x.font = fre(400, 12); x.textAlign = 'left'; x.fillText('0:42', m, ly + 24); x.textAlign = 'right'; x.fillText('-2:18', m + pw, ly + 24);
+    const cy = p0 + 172, mid = W / 2;
+    x.fillStyle = ink; x.beginPath(); x.arc(mid, cy, 30, 0, 7); x.fill();
+    x.fillStyle = bg; x.fillRect(mid - 10, cy - 11, 6.5, 22); x.fillRect(mid + 3.5, cy - 11, 6.5, 22);
+    x.fillStyle = ink;
+    x.fillRect(mid - 102, cy - 11, 3.5, 22); x.beginPath(); x.moveTo(mid - 79, cy - 11); x.lineTo(mid - 97, cy); x.lineTo(mid - 79, cy + 11); x.closePath(); x.fill();
+    x.fillRect(mid + 98.5, cy - 11, 3.5, 22); x.beginPath(); x.moveTo(mid + 79, cy - 11); x.lineTo(mid + 97, cy); x.lineTo(mid + 79, cy + 11); x.closePath(); x.fill();
+    x.strokeStyle = ink; x.lineWidth = 2.2;
+    const sx = m + 22; x.beginPath(); x.moveTo(sx - 12, cy + 8); x.lineTo(sx - 4, cy + 8); x.lineTo(sx + 6, cy - 8); x.lineTo(sx + 12, cy - 8); x.moveTo(sx - 12, cy - 8); x.lineTo(sx - 4, cy - 8); x.lineTo(sx + 6, cy + 8); x.lineTo(sx + 12, cy + 8); x.stroke();
+    rr(x, m + pw - 34, cy - 8, 24, 16, 6); x.stroke();
+    x.strokeStyle = dark ? '#555' : '#dcdce2'; x.lineWidth = 3; rr(x, 5, 5, W - 10, H - 10, 24); x.stroke();
+  }
+
+  if (f === 'film') {
+    const side = 70, pw = 440, ph = ph1(pw, 330), gap = 34, top = 44, bot = 44, W = side * 2 + pw, H = top + n * ph + (n - 1) * gap + bot;
+    mk(W, H);
+    const hole = dark ? '#f1ede2' : '#ffffff', tag = dark ? '#ffb03a' : '#d9791a';
+    for (let yy = 12; yy < H - 24; yy += 36) [22, W - 48].forEach(hx => {
+      x.fillStyle = hole; rr(x, hx, yy, 26, 20, 6); x.fill();
+      if (!dark) { x.strokeStyle = ink; x.lineWidth = 2; x.stroke(); }
+    });
+    x.fillStyle = tag; x.textAlign = 'center'; x.font = mono(700, 14); spacing('4px'); x.fillText((ttl || 'Shangkoy 400').toUpperCase(), W / 2, 30); spacing('0px');
+    imgs.forEach((im, i) => {
+      const y = top + i * (ph + gap);
+      drawCover(x, im, side, y, pw, ph);
+      if (!dark) { x.strokeStyle = ink; x.lineWidth = 3; x.strokeRect(side, y, pw, ph); }
+      x.fillStyle = tag; x.font = mono(700, 14); x.textAlign = 'left'; x.fillText(`${i + 1}A  >`, side, y + ph + 22);
+      x.textAlign = 'right'; x.fillText(String(i + 1), side + pw, y + ph + 22);
+    });
+  }
+  if (f === 'music') {                              // music-player print: round photos on top, "now playing" bar and controls at the bottom
+    const side = 30, pw = 460, ph = ph1(pw, 350), gap = 14, top = 78, W = side * 2 + pw, plH = 262, H = top + n * ph + (n - 1) * gap + 22 + plH;
+    mk(W, H);
+    x.fillStyle = ink; x.beginPath(); x.arc(side + 14, 40, 14, 0, 7); x.fill();
+    x.strokeStyle = bg; x.lineWidth = 2.2; [[-5, 7.5], [-3, 5.5], [-1, 3.5]].forEach(([dy, r]) => { x.beginPath(); x.arc(side + 14, 40 - dy + 5, r, 1.15 * Math.PI, 1.85 * Math.PI); x.stroke(); });
+    x.fillStyle = ink; x.textAlign = 'left'; x.font = fre(700, 17); x.fillText('now playing', side + 38, 46);
+    x.strokeStyle = sub; x.lineWidth = 3;
+    for (let b = 0; b < 40; b++) { const hh = 6 + ((b * 37) % 9) * 3.2, bx = W - side - 210 + b * 5.2; x.beginPath(); x.moveTo(bx, 40 - hh / 2); x.lineTo(bx, 40 + hh / 2); x.stroke(); }
+    imgs.forEach((im, i) => {
+      const y = top + i * (ph + gap);
+      x.save(); rr(x, side, y, pw, ph, 16); x.clip(); drawCover(x, im, side, y, pw, ph); x.restore();
+      x.strokeStyle = ink; x.lineWidth = 3; rr(x, side, y, pw, ph, 16); x.stroke();
+    });
+    const p0 = top + n * ph + (n - 1) * gap + 22, mid = W / 2, song = ttl || 'Shangkoy Photobooth';
+    x.textAlign = 'center'; x.fillStyle = ink; fitTo(song, p => fre(700, p), 24, pw); x.fillText(song, mid, p0 + 30);
+    x.fillStyle = sub; x.font = fre(400, 14); x.fillText('good energy · ' + now.toLocaleDateString(), mid, p0 + 52);
+    const ly = p0 + 92, kx = side + pw * .38, cy = p0 + 172;
+    x.fillStyle = dark ? '#555' : '#d4d2de'; rr(x, side, ly - 2, pw, 4, 2); x.fill();
+    x.fillStyle = ink; rr(x, side, ly - 2, pw * .38, 4, 2); x.fill(); x.beginPath(); x.arc(kx, ly, 7, 0, 7); x.fill();
+    x.fillStyle = sub; x.font = fre(400, 12); x.textAlign = 'left'; x.fillText('0:42', side, ly + 24); x.textAlign = 'right'; x.fillText('-2:18', side + pw, ly + 24);
+    x.fillStyle = ink; x.beginPath(); x.arc(mid, cy, 30, 0, 7); x.fill();
+    x.fillStyle = bg; x.fillRect(mid - 10, cy - 11, 6.5, 22); x.fillRect(mid + 3.5, cy - 11, 6.5, 22);
+    x.fillStyle = ink;
+    x.fillRect(mid - 102, cy - 11, 3.5, 22); x.beginPath(); x.moveTo(mid - 79, cy - 11); x.lineTo(mid - 97, cy); x.lineTo(mid - 79, cy + 11); x.closePath(); x.fill();
+    x.fillRect(mid + 98.5, cy - 11, 3.5, 22); x.beginPath(); x.moveTo(mid + 79, cy - 11); x.lineTo(mid + 97, cy); x.lineTo(mid + 79, cy + 11); x.closePath(); x.fill();
+    x.strokeStyle = ink; x.lineWidth = 2.2;
+    const sx = side + 22; x.beginPath(); x.moveTo(sx - 12, cy + 8); x.lineTo(sx - 4, cy + 8); x.lineTo(sx + 6, cy - 8); x.lineTo(sx + 12, cy - 8); x.moveTo(sx - 12, cy - 8); x.lineTo(sx - 4, cy - 8); x.lineTo(sx + 6, cy + 8); x.lineTo(sx + 12, cy + 8); x.stroke();
+    rr(x, side + pw - 34, cy - 8, 24, 16, 6); x.stroke();
+  }
+
+  if (f === 'doodle') {                             // outlined name pill, heart-arrow, QR block and tiny doodles between the photos
+    const side = 38, W = 520, pw = W - side * 2, ph = ph1(pw, 335), gap = 24, top = 120, bot = 70, H = top + n * ph + (n - 1) * gap + bot;
+    mk(W, H);
+    const name = (ttl || 'shangkoy pix').toUpperCase();
+    x.strokeStyle = ink; x.lineWidth = 4; rr(x, W / 2 - 120, 40, 240, 62, 31); x.stroke();
+    x.fillStyle = ink; x.textAlign = 'center'; fitTo(name, p => fnt(st.titleFont, p), 28, 190); x.fillText(name, W / 2, 80);
+    x.lineWidth = 3; heartPath(x, side + 34, 66, 11); x.stroke();
+    x.beginPath(); x.moveTo(side + 4, 90); x.lineTo(side + 66, 44); x.moveTo(side + 66, 44); x.lineTo(side + 55, 46); x.moveTo(side + 66, 44); x.lineTo(side + 62, 55); x.stroke();
+    qrLike(x, W - side - 66, 30, 66, ink, bg, now.getDate() * 31 + n);
+    imgs.forEach((im, i) => {
+      const y = top + i * (ph + gap); drawCover(x, im, side, y, pw, ph);
+      if (i < n - 1) {
+        const dy = y + ph + gap / 2, k = i % 3; x.strokeStyle = ink; x.lineWidth = 2;
+        if (k === 0) { x.beginPath(); x.moveTo(side + 4, dy - 4); x.lineTo(side + 12, dy + 4); x.moveTo(side + 12, dy - 4); x.lineTo(side + 4, dy + 4); x.stroke(); }
+        if (k === 1) { heartPath(x, side + pw - 14, dy, 5); x.stroke(); }
+        if (k === 2) { x.beginPath(); for (let s = 0; s < 10; s++) { const a = -Math.PI / 2 + s * Math.PI / 5, r = s % 2 ? 3.5 : 8; x[s ? 'lineTo' : 'moveTo'](side + 12 + Math.cos(a) * r, dy + Math.sin(a) * r); } x.closePath(); x.stroke(); }
+      }
+    });
+    x.strokeStyle = ink; x.lineWidth = 2; heartPath(x, side + 10, H - 30, 6); x.stroke();
+    x.fillStyle = sub; x.font = mono(700, 13); x.textAlign = 'center'; x.fillText(now.toLocaleDateString(), W / 2, H - 26);
+  }
+
+  if (f === 'grid2') {                              // two columns of slightly offset photos, small caption row at the bottom
+    const W = 540, side = 28, pw = sp ? 484 : 236, ph = ph1(pw, 228), gx = 24, gy = 20, top = 96, bot = 80, rows = Math.ceil(n / 2), H = top + rows * ph + (rows - 1) * gy + 12 + bot;
+    mk(W, H);
+    x.fillStyle = ink; x.beginPath(); x.moveTo(side, 20); x.lineTo(side + 8, 25); x.lineTo(side, 30); x.closePath(); x.fill();
+    x.beginPath(); x.moveTo(W * .42, 20); x.lineTo(W * .42 + 8, 25); x.lineTo(W * .42, 30); x.closePath(); x.fill();
+    x.font = mono(700, 10); x.textAlign = 'left'; x.fillText(String(n), W * .42 + 14, 29);
+    const name = (ttl || 'shangkoy').toLowerCase();
+    x.textAlign = 'right'; fitTo(name, p => fnt(st.titleFont, p), 36, 260); x.fillText(name, W - side, 58);
+    imgs.forEach((im, i) => {
+      const r = Math.floor(i / 2), col = i % 2, odd = i === n - 1 && n % 2 === 1;
+      const px = odd ? (W - pw) / 2 : side + col * (pw + gx) + (r % 2 ? 4 : 0), py = top + r * (ph + gy) + (col ? 12 : 0);
+      drawCover(x, im, px, py, pw, ph);
+    });
+    const ly = H - 28; x.fillStyle = ink; x.font = mono(700, 11); spacing('1px');
+    x.textAlign = 'left'; x.fillText('KEEP SMILING', side, ly);
+    x.textAlign = 'center'; x.fillText(p2(now.getMonth() + 1) + '.' + p2(now.getDate()), W * .36, ly);
+    fitTo(name.toUpperCase(), p => mono(700, p), 11, 120); x.fillText(name.toUpperCase(), W * .64, ly);
+    x.font = mono(700, 11); x.textAlign = 'right'; x.fillText('KEEP SMILING', W - side, ly); spacing('0px');
+  }
+
+  if (f === 'cuts') {                               // pastel-photo "four cuts" strip: side markers, big title and date at the bottom
+    const side = 46, pw = 408, ph = ph1(pw, 292), gap = 12, top = 20, bot = 200, W = side * 2 + pw, H = top + n * ph + (n - 1) * gap + bot;
+    mk(W, H);
+    const label = (ttl || 'four cuts').toUpperCase(), numTxt = String(now.getMonth() + 1) + p2(now.getDate());
+    imgs.forEach((im, i) => {
+      const y = top + i * (ph + gap), left = i % 2 === 0, cx = left ? side / 2 : W - side / 2, isNum = i % 4 === 0 || i % 4 === 3;
+      drawCover(x, im, side, y, pw, ph);
+      x.fillStyle = ink; x.beginPath(); x.moveTo(cx - 5, y + 14); x.lineTo(cx + 5, y + 14); x.lineTo(cx, y + 24); x.closePath(); x.fill();
+      const t = isNum ? numTxt : label;
+      spacing('2px'); x.save(); x.translate(cx + 4, y + ph / 2 + 14); x.rotate(-Math.PI / 2); x.textAlign = 'center';
+      fitTo(t, p => mono(700, p), 12, ph - 90); x.fillStyle = ink; x.fillText(t, 0, 0); x.restore(); spacing('0px');
+    });
+    const big = ttl || 'Four Cuts';
+    x.fillStyle = ink; x.textAlign = 'center'; fitTo(big, p => fnt(st.titleFont, p), 56, pw); x.fillText(big, W / 2, H - 92);
+    x.fillStyle = sub; x.font = mono(700, 15); x.fillText(`${now.getFullYear()}.${p2(now.getMonth() + 1)}.${p2(now.getDate())}`, W / 2, H - 48);
+  }
+
+  return c.toDataURL('image/png');
+}
 async function baseStrip() {
   await document.fonts.load('700 40px Fredoka'); await document.fonts.load(fnt(st.titleFont, 40), 'Aa');
   if (st.format === 'story') return storyStrip();
+  if (st.frame !== 'classic') return designStrip();
   if (curLayout()) return composeBoard(curLayout());
   const T = tpl(), n = photos.length, head = 80, foot = 80, pad = 36, gap = 22;
   const pw = T ? T.pw : 520, ph = Math.round(pw / (T ? T.ratio : 1.03));
@@ -425,6 +721,8 @@ const fontBtns = () => FONTS.map(f => `<button type="button" data-f="${f.k}" sty
 function markFmt() {
   [...$('editFmt').children].forEach(b => b.classList.toggle('on', b.dataset.f === st.format));
   $('editStyleBox').hidden = st.format === 'story';
+  $('editFrameBox').hidden = st.format !== 'strip';
+  [...$('editFrame').children].forEach(b => b.classList.toggle('on', b.dataset.f === st.frame));
 }
 function markFonts() {
   [...$('editTitleFont').children].forEach(b => b.classList.toggle('on', b.dataset.f === st.titleFont));
@@ -435,7 +733,7 @@ const BG_COLORS = ['#ffd04a', '#ffffff', '#f44d6a', '#ff9fb0', '#67d6e0', '#8fd3
 function markBg() { [...$('editBg').children].forEach(b => b.classList.toggle('on', b.dataset.c === st.bgColor)); }
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const defaultTitle = () => curLayout() ? 'SHANGKOY PHOTOBOOTH' : (tpl() ? tpl().title : 'Shangkoy Photobooth');
-function resetEdits() { ovl = []; selId = null; st.titleText = ''; st.bgColor = '#ffd04a'; st.titleFont = 'Fredoka'; st.format = 'strip'; markBg(); markFmt(); }
+function resetEdits() { ovl = []; selId = null; st.titleText = ''; st.bgColor = '#ffd04a'; st.titleFont = 'Fredoka'; st.format = 'strip'; st.frame = 'classic'; markBg(); markFmt(); }
 
 $('editStk').innerHTML = EMOJIS.map(e => `<button type="button" data-e="${e}" aria-label="Add ${e}">${e}</button>`).join('');
 const OUT_COLORS = ['', '#2b2640', '#ffffff', '#f44d6a', '#ffd04a', '#67d6e0', '#6757d9'];
@@ -450,6 +748,41 @@ $('editTitleFont').innerHTML = fontBtns(); $('selFont').innerHTML = fontBtns();
 $('editTitleFont').onclick = e => { const b = e.target.closest('button'); if (!b) return; st.titleFont = b.dataset.f; markFonts(); rebuildBase(); };
 $('selFont').onclick = e => { const b = e.target.closest('button'), o = ovl.find(v => v.id === selId); if (!b || !o) return; o.font = b.dataset.f; renderLayer(); };
 $('editFmt').onclick = e => { const b = e.target.closest('button'); if (!b) return; st.format = b.dataset.f; markFmt(); rebuildBase(); };
+// ---- Locked features: the frame designs and "Create own" need a code (a simple gate, kept until the tab is closed) ----
+const UNLOCK_CODE = '1432', FREE_TAKES = 5;
+const takesUsed = () => { try { return +localStorage.getItem('sk_takes') || 0; } catch (_) { return takesMem; } };
+let takesMem = 0;
+function bumpTakes() { takesMem++; try { localStorage.setItem('sk_takes', String(takesUsed() + 1)); } catch (_) {} updateTakes(); }
+function updateTakes() {
+  const left = Math.max(0, FREE_TAKES - takesUsed()), snap = $('snap');
+  $('takeLbl').textContent = unlocked ? 'Unlimited takes' : left ? `${left} of ${FREE_TAKES} free takes left` : 'Free takes used up';
+  snap.classList.toggle('locked', !unlocked && left === 0);
+}
+let unlocked = false, lockThen = null, lockCancel = null;
+try { unlocked = sessionStorage.getItem('sk_unlocked') === '1'; } catch (_) {}
+function markLocks() { updateTakes(); document.querySelectorAll('#editFrame button:not([data-f="classic"]), .tpl[data-t="custom"]').forEach(b => b.classList.toggle('locked', !unlocked)); }
+function needUnlock(then, cancel, msg) {
+  if (unlocked) return then();
+  lockThen = then; lockCancel = cancel || null;
+  $('lockNote').textContent = msg || 'Enter the code to unlock this feature.';
+  $('lockInput').value = ''; $('lockErr').hidden = true; $('lockDlg').showModal(); $('lockInput').focus();
+}
+function tryUnlock() {
+  if ($('lockInput').value.trim() === UNLOCK_CODE) {
+    unlocked = true; try { sessionStorage.setItem('sk_unlocked', '1'); } catch (_) {}
+    markLocks(); const go = lockThen; lockThen = lockCancel = null; $('lockDlg').close(); if (go) go();
+  } else { $('lockErr').hidden = false; $('lockInput').select(); }
+}
+$('lockOk').onclick = tryUnlock;
+$('lockInput').onkeydown = e => { if (e.key === 'Enter') tryUnlock(); };
+$('lockCancel').onclick = $('lockX').onclick = () => $('lockDlg').close();
+$('lockDlg').addEventListener('close', () => { const c = lockCancel; lockThen = lockCancel = null; if (c) c(); });
+markLocks();
+$('editFrame').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return; const key = b.dataset.f;
+  const apply = () => { st.frame = key; st.bgColor = FRAME_BG[key]; markBg(); markFmt(); rebuildBase(); };
+  if (key === 'classic') apply(); else needUnlock(apply);
+};
 $('editBg').innerHTML = BG_COLORS.map(c => `<button type="button" data-c="${c}" style="background:${c}" aria-label="Strip color ${c}"></button>`).join('');
 $('editBg').onclick = e => { const b = e.target.closest('button'); if (!b) return; st.bgColor = b.dataset.c; markBg(); rebuildBase(); };
 
@@ -534,7 +867,7 @@ $('editTitle').oninput = e => {
   clearTimeout(editTimer); editTimer = setTimeout(rebuildBase, 220);
 };
 $('editClear').onclick = () => {
-  ovl = []; selId = null; st.titleText = ''; st.bgColor = '#ffd04a'; st.titleFont = 'Fredoka'; st.format = 'strip'; markBg(); markFonts(); markFmt(); $('editTitle').value = defaultTitle();
+  ovl = []; selId = null; st.titleText = ''; st.bgColor = '#ffd04a'; st.titleFont = 'Fredoka'; st.format = 'strip'; st.frame = 'classic'; markBg(); markFonts(); markFmt(); $('editTitle').value = defaultTitle();
   renderLayer(); rebuildBase(); SFX.delete();
 };
 $('editDlg').addEventListener('cancel', e => e.preventDefault());   // Esc would lose the strip, so use the buttons

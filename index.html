@@ -6,7 +6,7 @@
 <title>Shangkoy Photobooth – Digital Arts Photobooth</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Space+Mono:wght@700&family=Pacifico&family=Bangers&family=Lobster&family=Permanent+Marker&family=Caveat:wght@700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=38">
+<link rel="stylesheet" href="css/style.css?v=47">
 </head>
 <body>
 <header class="top">
@@ -44,6 +44,7 @@
         <button class="tpl" data-t="trio"><span class="ic"><img src="assets/trio2.png" alt=""></span>Trio memes</button>
         <button class="tpl" data-t="duo"><span class="ic"><img src="assets/duo2.png" alt=""></span>Duo memes</button>
         <button class="tpl" data-t="couple"><span class="ic"><img src="assets/couple2.png" alt=""></span>Couple vibes</button>
+        <button class="tpl" data-t="bunny"><span class="ic"><img src="assets/bunny2.png" alt=""></span>Bunny pose</button>
         <button class="tpl" data-t="custom"><span class="ic" id="ownIc"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#2b2640" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>Create own</button>
       </div>
       <hr class="rule">
@@ -95,6 +96,7 @@
           <div class="lbl">Set timer</div>
           <div class="timers" id="timers"><button class="on" data-s="3">3s</button><button data-s="5">5s</button><button data-s="10">10s</button></div>
           <div class="lbl" id="timerLbl">3 seconds</div>
+          <div class="lbl takelbl" id="takeLbl"></div>
         </div>
       </div>
     </div>
@@ -183,6 +185,20 @@
         <button type="button" data-f="strip" class="on">Photo strip</button>
         <button type="button" data-f="story">Instagram story (My Day)</button>
       </div>
+      <div id="editFrameBox">
+        <div class="ownlbl">Frame design <span class="edithint">works with every template and layout</span></div>
+        <div id="editFrame" class="fontrow fmtrow">
+          <button type="button" data-f="classic" class="on">Classic</button>
+          <button type="button" data-f="photoism">Photoism</button>
+          <button type="button" data-f="ticket">Train ticket</button>
+          <button type="button" data-f="insta">Instagram posts</button>
+          <button type="button" data-f="film">Film</button>
+          <button type="button" data-f="music">Music player</button>
+          <button type="button" data-f="doodle">Doodle</button>
+          <button type="button" data-f="grid2">Grid frame</button>
+          <button type="button" data-f="cuts">Four cuts</button>
+        </div>
+      </div>
       <div id="editStyleBox">
       <label class="ownlbl" for="editTitle">Strip title</label>
       <input id="editTitle" class="owninput" type="text" maxlength="28" autocomplete="off">
@@ -214,6 +230,18 @@
     </div>
   </div>
 </dialog>
+<dialog id="lockDlg">
+  <button id="lockX" class="xbtn" type="button" aria-label="Close">✕</button>
+  <h3>🔒 Locked feature</h3>
+  <p class="locknote" id="lockNote">Enter the code to unlock this feature.</p>
+  <input id="lockInput" class="owninput lockinput" type="password" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="Enter code">
+  <p id="lockErr" class="lockerr" hidden>That code isn't right. Please try again.</p>
+  <p class="lockhelp">Don't have the code? Try sending a message or contact the owner/developer of this website to get it.</p>
+  <div class="ownacts">
+    <button id="lockCancel" class="btn white mono" type="button">Cancel</button>
+    <button id="lockOk" class="btn yellow mono" type="button">Unlock</button>
+  </div>
+</dialog>
 <dialog id="qrDlg">
   <h3>Scan to save your strip</h3>
   <div id="qrBox" class="qrbox"></div>
@@ -226,6 +254,6 @@
 
 <footer class="foot"><p>Art, code, and a very good camera angle.</p><small>Photo links expire in 1 hour</small></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="js/script.js?v=41"></script>
+<script src="js/script.js?v=47"></script>
 </body>
 </html>
